@@ -1,0 +1,43 @@
+image:
+  name: mirazola/scaphandre-test
+  tag: latest
+  pullPolicy: IfNotPresent
+
+port: 8080
+
+# Overrides the chart's name
+nameOverride: ""
+
+# Overrides the chart's computed fullname
+fullnameOverride: ""
+
+# Overrides the deployment namespace
+namespaceOverride: "ikerlan-monitoring"
+
+resources:
+  limits:
+    memory: 200Mi
+  requests:
+    cpu: 75m
+    memory: 100Mi
+
+# scaphandre --no-header json --containers --max-top-consumers=15
+scaphandre:
+  #command: stdout #prometheus
+  #args: ["-t3000"]
+  command: "-vv"
+  args: ["prometheus", "--containers"]
+  extraArgs:
+    containers:
+#  rustBacktrace: '1'
+
+# Run as root user to get proper permissions
+userID: 0
+groupID: 0
+
+serviceMonitor:
+  # Specifies whether ServiceMonitor for Prometheus operator should be created
+  enabled: true
+  interval: 3000ms # lower interval has given issues during tests (i.e. lost metrics, resulting in lost data points)
+  # Specifies namespace, where ServiceMonitor should be installed
+  namespace: ikerlan-monitoring

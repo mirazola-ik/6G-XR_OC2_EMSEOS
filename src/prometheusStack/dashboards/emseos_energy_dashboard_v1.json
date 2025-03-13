@@ -1,0 +1,1081 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 2,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 20,
+      "panels": [],
+      "title": "Energy overview",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 10,
+        "x": 7,
+        "y": 1
+      },
+      "id": 19,
+      "interval": "300s",
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto",
+        "text": {}
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(scaph_process_power_consumption_microwatts{container_id=~\"containerd://.*|cri-containerd-.*\"}[$__range]) * $__range_s / 1000000)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "CPU",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(DCGM_FI_DEV_POWER_USAGE[$__range]) * $__range_s)",
+          "format": "time_series",
+          "legendFormat": "GPU",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Total Energy (CPU + GPU)",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Total energy",
+            "mode": "reduceRow",
+            "reduce": {
+              "include": [
+                "CPU",
+                "GPU"
+              ],
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        }
+      ],
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 10,
+      "interval": "300s",
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (pod) (\r\n  label_replace(\r\n    topk(10, avg_over_time(scaph_process_power_consumption_microwatts{container_id=~\"containerd://.*|cri-containerd-.*\"}[5m]) * 300 / 1000000),\r\n    \"container_id\",\r\n    \"containerd://$1\",\r\n    \"container_id\",\r\n    \"cri-containerd-(.*)\"\r\n  )\r\n  * on(container_id) group_left(pod)\r\n  kube_pod_container_info{container_id=~\"containerd://.*|cri-containerd-.*\"}\r\n)\r\n",
+          "legendFormat": "{{pod}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Top 10 consuming Pods (5m window)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 83,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 12,
+      "interval": "300s",
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.6,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (gpu) (\r\n  avg_over_time(DCGM_FI_DEV_POWER_USAGE[5m]) * 300\r\n)\r\n",
+          "legendFormat": "GPU {{gpu}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Energy by GPU (5m window)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 32,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 8,
+      "interval": "15s",
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(scaph_process_power_consumption_microwatts{container_id=~\"containerd://.*|cri-containerd-.*\"}[15s]) / 1000000) * 15\r\n",
+          "format": "time_series",
+          "legendFormat": "CPU Energy",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(DCGM_FI_DEV_POWER_USAGE[15s])) * 15\r\n",
+          "format": "time_series",
+          "legendFormat": "GPU Energy",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "CPU vs. GPU Energy (15s window)",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 21,
+      "interval": "15s",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(scaph_process_power_consumption_microwatts{container_id=~\"containerd://.*|cri-containerd-.*\"}[15s]) / 1000000) * 15\r\n",
+          "format": "time_series",
+          "legendFormat": "CPU Energy",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(DCGM_FI_DEV_POWER_USAGE[15s])) * 15\r\n",
+          "format": "time_series",
+          "legendFormat": "GPU Energy",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "CPU vs. GPU Energy (15s window)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Energy calculated using 15s window",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "cumulative sum(CPU Energy)",
+                  "cumulative sum(GPU Energy)"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": []
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 18,
+      "interval": "15s",
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.68,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "normal",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 100
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(scaph_process_power_consumption_microwatts{container_id=~\"containerd://.*|cri-containerd-.*\"}[15s]) / 1000000) * 15\r\n",
+          "format": "time_series",
+          "legendFormat": "CPU Energy",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(avg_over_time(DCGM_FI_DEV_POWER_USAGE[15s])) * 15\r\n",
+          "format": "time_series",
+          "legendFormat": "GPU Energy",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Cumulative CPU & GPU Energy",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "cumulative": {
+              "field": "GPU Energy",
+              "reducer": "sum"
+            },
+            "mode": "cumulativeFunctions",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "cumulative": {
+              "field": "CPU Energy",
+              "reducer": "sum"
+            },
+            "mode": "cumulativeFunctions",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "CPU Energy": true,
+              "GPU Energy": true
+            },
+            "includeByName": {},
+            "indexByName": {
+              "CPU Energy": 1,
+              "GPU Energy": 2,
+              "Time": 0,
+              "cumulative sum(CPU Energy)": 3,
+              "cumulative sum(GPU Energy)": 4
+            },
+            "renameByName": {
+              "cumulative sum(CPU Energy)": "CPU",
+              "cumulative sum(GPU Energy)": "GPU"
+            }
+          }
+        }
+      ],
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(scaph_process_power_consumption_microwatts{container_id=~\"containerd://.*|cri-containerd-.*\"}  / 1000000)",
+          "format": "time_series",
+          "legendFormat": "CPU Power",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(DCGM_FI_DEV_POWER_USAGE)",
+          "format": "time_series",
+          "legendFormat": "GPU Power",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "CPU vs. GPU power over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 58
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum(scaph_process_cpu_usage_percentage)",
+          "format": "time_series",
+          "legendFormat": "CPU",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "editorMode": "code",
+          "expr": "DCGM_FI_DEV_GPU_UTIL",
+          "format": "time_series",
+          "legendFormat": "GPU {{gpu}}",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "CPU vs. GPU usage over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Sum of total CPU consumption of all the pods inside 'ikerlan-monitoring' namespace",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 0,
+        "y": 68
+      },
+      "id": 15,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": false,
+        "sizing": "auto"
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum (\r\n  label_replace(\r\n    avg_over_time(scaph_process_power_consumption_microwatts[$__range]) * $__range_s / 1000000,\r\n    \"container_id\",\r\n    \"containerd://$1\",\r\n    \"container_id\",\r\n    \"cri-containerd-(.*)\"\r\n  ) * on(container_id) group_left(pod) (\r\n    kube_pod_container_info{namespace=\"ikerlan-monitoring\", container_id=~\"containerd://.*|cri-containerd-.*\"}\r\n  )\r\n)",
+          "instant": false,
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Monitoring agent CPU consumption",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic-by-name"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineStyle": {
+              "fill": "solid"
+            },
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "joule"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 17,
+        "x": 7,
+        "y": 68
+      },
+      "id": 16,
+      "interval": "3s",
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.1",
+      "targets": [
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(avg_over_time(scaph_process_power_consumption_microwatts[15s]) * 15 / 1000000)",
+          "format": "time_series",
+          "instant": false,
+          "legendFormat": "Total CPU",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(\r\n  sum by (pod) (\r\n  label_replace(\r\n    avg_over_time(scaph_process_power_consumption_microwatts[15s]) * 15 / 1000000,\r\n    \"container_id\",\r\n    \"containerd://$1\",\r\n    \"container_id\",\r\n    \"cri-containerd-(.*)\"\r\n  ) * on(container_id) group_left(pod) (\r\n    kube_pod_container_info{namespace=\"ikerlan-monitoring\", container_id=~\"containerd://.*|cri-containerd-.*\"}\r\n  )\r\n)\r\n)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "MonitoringAgent",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "Total vs Monitoring agent consumption (15s window)",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "",
+  "schemaVersion": 40,
+  "tags": [],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "EMSEOS Energy dashboard",
+  "uid": "beaxyjq4hiccgd2",
+  "version": 1,
+  "weekStart": ""
+}

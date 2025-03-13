@@ -1,0 +1,46 @@
+## psp.yaml
+{{- if .Capabilities.APIVersions.Has "policy/v1beta1" }}
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: {{ template "scaphandre.name" . }}
+  labels:
+    {{- include "labels.common" . | nindent 4 }}
+spec:
+  # Allow privileged access to access hardware resources such as Powercap
+  privileged: true
+  
+  # Allow containers to escalate their privileges, as needed for accessing hardware metrics
+  allowPrivilegeEscalation: true
+  
+  # Allow any user to run the pod
+  runAsUser:
+    rule: RunAsAny
+  
+  # Allow any SELinux context for the pod (in case your cluster uses SELinux)
+  seLinux:
+    rule: RunAsAny
+  
+  # Allow any supplemental group for the pod
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  
+  # Allow any filesystem group
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1
+        max: 65535
+  
+  # Allow hostPath and projected volumes (to access metrics paths on the host)
+  volumes:
+  - hostPath
+  - projected
+  
+  # Enable hostPID and hostIPC to allow access to host-level resources such as powercap
+  hostPID: true
+  hostIPC: true
+{{- end }}
