@@ -1,10 +1,14 @@
-> WARNING
+# Overview
+This repository contains the work supported by the [EMSEOS Open Call](https://6g-xr.eu/open-calls/oc2-results/) of the [6G-XR](https://6g-xr.eu/) project.
+---
+# Prerequisites
+> INFO
+> 
 > In case a remote cluster is targeted, the *`--kubeconfig`* flag must be used in every kubectl and helm commands:
 > - `kubectl --kubeconfig=kubeconfig get nodes`
 > - `helm install prometheus prometheus-community/kube-prometheus-stack --kubeconfig kubeconfig --namespace ikerlan-monitoring --values values.yml` 
----
-# Prerequisites
 ## Working directory structure:
+- Ensure access to a running Kubernetes cluster.
 - *kubeconfig* file in root folder (./)
 - Files under *scripts* folder need to be executable: 
   ```bash

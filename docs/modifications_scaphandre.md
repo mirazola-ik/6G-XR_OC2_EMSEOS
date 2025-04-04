@@ -1,4 +1,5 @@
 # Overview
+- During the development stage of the project, some issues were present in the Scaphandre tool. As a result, some modifications were done based on user feedback from Scaphandre's official repositoryk.
 - This document describes the modifications done in the Scaphandre repository.
 - Note that the modificitations described in this document are **already implemented** in the current repository.
 

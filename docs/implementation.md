@@ -58,6 +58,11 @@ kubectl create configmap k8s-cluster-dashboard \
   --from-file=k8s_cluster_dashboard.json \
   -n ikerlan-monitoring \
   --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create configmap emseos-energy-dashboard-v1 \
+  --from-file=emseos_energy_dashboard_v1.json \
+  -n ikerlan-monitoring \
+  --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 Then, label them, so that the Grafana sidecar located inside *values_prometheusStack.yml* automatically detects them:
@@ -67,11 +72,13 @@ kubectl label configmap scaphandre-dashboard grafana_dashboard=1 -n ikerlan-moni
 kubectl label configmap dcgm-dashboard grafana_dashboard=1 -n ikerlan-monitoring --overwrite
 
 kubectl label configmap k8s-cluster-dashboard grafana_dashboard=1 -n ikerlan-monitoring --overwrite
+
+kubectl label configmap emseos-energy-dashboard-v1 grafana_dashboard=1 -n ikerlan-monitoring --overwrite
 ```
 
 
 ## 3- Deploy prometheus stack using Helm
-As DCGM-exporter needs prometheus, it is installed before DCGM-exporter. Additionally, grafana is also installed during this step, as it is included in the *prometheus-community/kube-prometheus-stack* helm chart.
+As DCGM-exporter needs prometheus, it must be installed before DCGM-exporter. Additionally, grafana is also installed during this step, as it is included in the *prometheus-community/kube-prometheus-stack* helm chart.
 
 ```bash
 $ helm install prometheus prometheus-community/kube-prometheus-stack --kubeconfig kubeconfig --namespace ikerlan-monitoring --values prometheus/values_prometheusStack.yml
@@ -103,7 +110,7 @@ prometheus-prometheus-node-exporter-hh9sr                1/1     Running   0    
 ```
 
 ## 4- Install NVIDIA device plugin (prerequisite for DCGM)
-It must be installed in ***kube-system*** namespace.
+It must be installed in ***kube-system*** namespace. Refer to the [official repository](https://github.com/NVIDIA/k8s-device-plugin) for more information about the device plugin.
 
 ```bash
 $ kubectl  apply -f mia-deployment/helm_charts/nvidia-device-plugin.yml
